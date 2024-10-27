@@ -5,14 +5,16 @@
             <view class="card-box">
                 <view class="card" @click="selectCard(item, index, $event)" v-for="(item, index) in allCardList"
                     :key="index" :style="{ left: item.left, top: item.top }">
-                    <img :src="`/src/assets/${item.icon}.svg`" alt="icon" style="width: 20px; height: 20px;" />
+                    <image :src="`/static/img/${item.icon}.png`" alt="icon" style="width: 20px; height: 20px;" ></image>
                 </view>
             </view>
         </view>
         <!-- bottom -->
-        <view class="bottom-selected-box">
-            <view class="selected-card" v-for="(item, index) in selectedCard" :key="index">
-                <img :src="`/src/assets/${item.icon}.svg`" alt="icon" style="width: 20px; height: 20px;" />
+        <view class="bottom-box">
+            <view class="bottom-selected-box">
+                <view class="selected-card" v-for="(item, index) in selectedCard" :key="index">
+                    <image :src="`/static/img/${item.icon}.png`" alt="icon" style="width: 20px; height: 20px;" ></image>
+                </view>
             </view>
         </view>
     </view>
@@ -61,25 +63,49 @@ const updateReceivedCardList = () => {
 };
 
 function selectCard(item, index, event) {
-    let isHover = hasOverLayer(event.srcElement)
-    if (isHover) {
-        return
-    }
-    currentSelectCard.value = item
-    allCardList.value.splice(index, 1)
-    selectedCard.value.push(item)
-    // 排序
-    selectedCard.value.sort((a, b) => {
-        return a.picIndex - b.picIndex
-    })
-    checkRemove()
-    if (selectedCard.value.length > 7) {
-        alert("你输了！")
-    }
-    if (allCardList.value.length == 0) {
-        alert("你赢了！")
-    }
+    console.log(event)
+    hasOverLayer("your-element-id", (isOverlayed) => {
+        if (isOverlayed) {
+            console.log("该元素被遮挡了");
+        } else {
+            console.log("该元素未被遮挡");
+            currentSelectCard.value = item
+            allCardList.value.splice(index, 1)
+            selectedCard.value.push(item)
+            
+            // 排序
+            selectedCard.value.sort((a, b) => {
+                return a.picIndex - b.picIndex
+            })
+            
+            checkRemove()
+            
+            // 判断胜利或失败条件并弹出提示
+            if (selectedCard.value.length > 7) {
+                uni.showModal({
+                    title: "提示",
+                    content: "你输了！",
+                    showCancel: false,
+                    success: () => {
+                        // 重新开始或其他处理逻辑
+                    }
+                })
+            }
+            
+            if (allCardList.value.length === 0) {
+                uni.showModal({
+                    title: "提示",
+                    content: "你赢了！",
+                    showCancel: false,
+                    success: () => {
+                        // 重新开始或其他处理逻辑
+                    }
+                })
+            }
+        }
+    });
 }
+
 
 // 判断消除
 function checkRemove() {
@@ -96,26 +122,55 @@ function checkRemove() {
     })
 }
 
-// 监测元素是否被覆盖
-function hasOverLayer(element) {
-    let document = element.ownerDocument,
-        rect = element.getBoundingClientRect(), // 获取目标的矩形信息
-        x = rect.x,
-        y = rect.y,
-        width = rect.width,
-        height = rect.height;
-    x |= 0;
-    y |= 0;
-    width |= 0;
-    height |= 0;
-    let elements = [
-        document.elementFromPoint(x + 1, y + 1),
-        document.elementFromPoint(x + width - 1, y + 1),
-        document.elementFromPoint(x + 1, y + height - 1),
-        document.elementFromPoint(x + width - 1, y + height - 1)
-    ];
-    return elements.filter((el) => el != null).some((el) => el !== element && !element.contains(el));
+function hasOverLayer(elementId, callback) {
+    const query = uni.createSelectorQuery();
+    console.log("query:", query)
+    // 获取目标元素的矩形信息
+    query.select(`#${elementId}`).boundingClientRect((rect) => {
+        if (!rect) {
+            callback(false); // 如果目标元素未找到，直接返回 false
+            return;
+        }
+
+        const { left, top, width, height } = rect;
+
+        // 定义目标元素的四个角点坐标
+        const points = [
+            { x: left + 1, y: top + 1 },
+            { x: left + width - 1, y: top + 1 },
+            { x: left + 1, y: top + height - 1 },
+            { x: left + width - 1, y: top + height - 1 },
+        ];
+
+        // 标志，用于判断是否有覆盖
+        let hasOverlay = false;
+        let checkedPoints = 0;
+
+        // 遍历每个检测点，检查是否被其他元素遮挡
+        points.forEach(({ x, y }) => {
+            query.selectAll('*').boundingClientRect((allRects) => {
+                checkedPoints++;
+
+                // 判断是否有其他元素覆盖当前检测点
+                if (allRects.some((el) => {
+                    return (
+                        el.id !== elementId &&  // 排除目标元素自身
+                        x >= el.left && x <= el.right &&
+                        y >= el.top && y <= el.bottom
+                    );
+                })) {
+                    hasOverlay = true;
+                }
+
+                // 当所有检测点都处理完后，通过回调返回遮挡情况
+                if (checkedPoints === points.length) {
+                    callback(hasOverlay);
+                }
+            }).exec();
+        });
+    }).exec();
 }
+
 
 onMounted(() => {
     let index = 0
@@ -134,13 +189,17 @@ onMounted(() => {
 .top-box {
     width: 100%;
     height: 500px;
-    background-color: greenyellow;
+    background-color: rgb(195, 254, 139);
 }
-
+.bottom-box {
+    width: 100%;
+    height: 200px;
+    background-color: rgb(195, 254, 139);
+}
 .card-box {
     width: 350px;
     height: 100%;
-    background-color: #dddaaa;
+    background-color: rgb(195, 254, 139);
     margin: 0 auto;
     position: relative;
 }
@@ -148,6 +207,9 @@ onMounted(() => {
 .card {
     width: 48px;
     height: 48px;
+    display: flex;
+    justify-content: center;  /* 水平居中 */
+    align-items: center;      /* 垂直居中 */
     line-height: 48px;
     border: 1px solid #666;
     text-align: center;
@@ -159,18 +221,21 @@ onMounted(() => {
 .selected-card {
     width: 48px;
     height: 48px;
+    display: flex;
+    justify-content: center;  /* 水平居中 */
+    align-items: center;      /* 垂直居中 */
     line-height: 48px;
     border: 1px solid #666;
     text-align: center;
     box-shadow: 0px 0px 6px 0px #545454;
     background-color: #fff;
-    display: inline-block;
 }
 
 .bottom-selected-box {
     width: 350px;
     height: 50px;
-    background-color: antiquewhite;
+    background-color: rgb(150, 91, 27);
+    display: flex;
     margin: 0 auto;
 }
 </style>

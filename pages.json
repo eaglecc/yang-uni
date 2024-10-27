@@ -3,14 +3,14 @@
 		{
 			"path": "pages/index/index",
 			"style": {
-				"navigationBarTitleText": "uni-app"
+				"navigationBarTitleText": "心雨百宝箱"
 			}
 		},
 		{
 		    "path" : "pages/yang/yang",
 		    "style" : 
 		    {
-		        "navigationBarTitleText" : ""
+		        "navigationBarTitleText" : "消除小游戏"
 		    }
 		}
 	],
