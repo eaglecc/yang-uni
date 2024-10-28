@@ -10,7 +10,7 @@ import { ref } from 'vue';
 
 function playGames(){
     uni.navigateTo({
-        url:"/pages/yang/yang"
+        url:"/pages/yang/stage1/stage1"
     })
 }
 

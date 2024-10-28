@@ -3,9 +3,9 @@
         <!-- top -->
         <view class="top-box">
             <view class="card-box">
-                <view class="card" @click="selectCard(item, index, $event)" v-for="(item, index) in allCardList"
+                <view class="card" @click="selectCard(item, index, `image-${index}`)" v-for="(item, index) in allCardList"
                     :key="index" :style="{ left: item.left, top: item.top }">
-                    <image :src="`/static/img/${item.icon}.png`" alt="icon" style="width: 20px; height: 20px;" ></image>
+                    <image :id="`image-${index}`" :src="`/static/img/${item.icon}.png`" alt="icon" style="width: 20px; height: 20px;" ></image>
                 </view>
             </view>
         </view>
@@ -62,9 +62,8 @@ const updateReceivedCardList = () => {
     });
 };
 
-function selectCard(item, index, event) {
-    console.log(event)
-    hasOverLayer("your-element-id", (isOverlayed) => {
+function selectCard(item, index, imageId) {
+    hasOverLayer(imageId, (isOverlayed) => {
         if (isOverlayed) {
             console.log("该元素被遮挡了");
         } else {
@@ -124,8 +123,7 @@ function checkRemove() {
 
 function hasOverLayer(elementId, callback) {
     const query = uni.createSelectorQuery();
-    console.log("query:", query)
-    // 获取目标元素的矩形信息
+
     query.select(`#${elementId}`).boundingClientRect((rect) => {
         if (!rect) {
             callback(false); // 如果目标元素未找到，直接返回 false
@@ -133,8 +131,6 @@ function hasOverLayer(elementId, callback) {
         }
 
         const { left, top, width, height } = rect;
-
-        // 定义目标元素的四个角点坐标
         const points = [
             { x: left + 1, y: top + 1 },
             { x: left + width - 1, y: top + 1 },
@@ -142,27 +138,15 @@ function hasOverLayer(elementId, callback) {
             { x: left + width - 1, y: top + height - 1 },
         ];
 
-        // 标志，用于判断是否有覆盖
         let hasOverlay = false;
         let checkedPoints = 0;
 
-        // 遍历每个检测点，检查是否被其他元素遮挡
         points.forEach(({ x, y }) => {
             query.selectAll('*').boundingClientRect((allRects) => {
                 checkedPoints++;
-
-                // 判断是否有其他元素覆盖当前检测点
-                if (allRects.some((el) => {
-                    return (
-                        el.id !== elementId &&  // 排除目标元素自身
-                        x >= el.left && x <= el.right &&
-                        y >= el.top && y <= el.bottom
-                    );
-                })) {
+                if (allRects.some((el) => el.id !== elementId && x >= el.left && x <= el.right && y >= el.top && y <= el.bottom)) {
                     hasOverlay = true;
                 }
-
-                // 当所有检测点都处理完后，通过回调返回遮挡情况
                 if (checkedPoints === points.length) {
                     callback(hasOverlay);
                 }

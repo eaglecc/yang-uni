@@ -12,6 +12,13 @@
 		    {
 		        "navigationBarTitleText" : "消除小游戏"
 		    }
+		},
+		{
+		    "path" : "pages/yang/stage1/stage1",
+		    "style" : 
+		    {
+		        "navigationBarTitleText" : ""
+		    }
 		}
 	],
 	"globalStyle": {
