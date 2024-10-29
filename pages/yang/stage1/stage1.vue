@@ -1,10 +1,10 @@
 <template>
 	<view>
-		<view style="margin: 0; display: block;">
+		<view style="margin: 0; display: block; background-color: #71a419; height: 100vh;">
 			<!-- 消除展示框 -->
 			<view class="move-list" :style="{
 				height: (size + 2) + 'rpx',
-				width: (size * 6) + 'rpx',
+				width: (size * 7) + 'rpx',
 				top: (windowHeight - (size * 4)) + 'rpx'
 			}">
 			</view>
@@ -21,7 +21,7 @@
 						width: (size - 6) + 'rpx',
 						height: (size - 6) + 'rpx',
 						borderRadius: '8rpx',
-						backgroundColor: '#71a419',
+						backgroundColor: '#71a419fffffff',
 						border: '2rpx solid #71a419',
 						borderBottom: '10rpx solid #71a419'
 					}" :src="item.src"></image>
@@ -40,7 +40,7 @@ const rows = ref(7); // 行数
 const cols = ref(7); // 列数
 const oneGroupCount = ref(3); // 每组卡片数量
 const group = ref(8); // 组数
-const layerCount = ref(16); // 总层数
+const layerCount = ref(24); // 总层数
 
 // 储存卡片信息和消除状态
 const cellHtml = ref([]);
@@ -57,7 +57,13 @@ const simpleData = ref([
 	{ name: '牛奶', src: '/static/img/6.jpg' },
 	{ name: '胡萝卜', src: '/static/img/7.jpg' },
 	{ name: '玉米', src: '/static/img/8.jpg' },
-	{ name: '刷子', src: '/static/img/9.jpg' }
+	{ name: '刷子', src: '/static/img/9.jpg' },
+	{ name: '鸡腿', src: '/static/img/chicken.png' },
+    { name: '鸡蛋', src: '/static/img/egg.png' },
+    { name: '鱼', src: '/static/img/fish.png' },
+    { name: '汉堡', src: '/static/img/hambuger.png' },
+    { name: '牛奶', src: '/static/img/milk.png' },
+    { name: '面条', src: '/static/img/noodles.png' },
 ]);
 
 // 页面初始化
@@ -195,7 +201,7 @@ function modeEnd(item) {
 
 	setTimeout(() => {
 		// 游戏结束或通关提示
-		if (moveData.value.length === 6) {
+		if (moveData.value.length === 7) {
             showModal("池子已满，游戏结束")
 		} else if (cellHtml.value.every(item => item.isMove)) {
             showModal("恭喜通关")
@@ -249,7 +255,7 @@ function showModal(contents) {
 .move-list {
 	position: relative;
 	border: 1 solid #ddd;
-	background-color: #ddd;
+	background-color: rgb(150, 91, 27);
 	margin: 0 auto;
 }
 </style>
