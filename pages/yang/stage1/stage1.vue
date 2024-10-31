@@ -1,13 +1,6 @@
 <template>
 	<view>
 		<view style="margin: 0; display: block; background-color: #71a419; height: 100vh;">
-			<!-- 消除展示框 -->
-			<view class="move-list" :style="{
-				height: (size + 2) + 'rpx',
-				width: (size * 7) + 'rpx',
-				top: (windowHeight - (size * 4)) + 'rpx'
-			}">
-			</view>
 			<!-- 卡牌框 -->
 			<view class="mall">
 				<view v-for="(item, index) in cellHtml" :key="index" class="item" :class="{ disabled: item.disabled }"
@@ -21,12 +14,38 @@
 						width: (size - 6) + 'rpx',
 						height: (size - 6) + 'rpx',
 						borderRadius: '8rpx',
-						backgroundColor: '#71a419fffffff',
+						backgroundColor: '#ffffff',
 						border: '2rpx solid #71a419',
 						borderBottom: '10rpx solid #71a419'
 					}" :src="item.src"></image>
 				</view>
 			</view>
+            <!-- 临时展示框 -->
+            <view class="temp-list" :style="{
+            	width: (size * 7) + 'rpx',
+                height: (size + 2) + 'rpx',
+            	top: (windowHeight - (size * 6)) + 'rpx'
+            }">
+            </view>
+            
+            <!-- 消除展示框 -->
+            <view class="move-list" :style="{
+            	width: (size * 7) + 'rpx',
+                height: (size + 2) + 'rpx',
+            	top: (windowHeight - (size * 3.5)) + 'rpx'
+            }">
+            </view>
+
+            <!-- 功能框 -->
+            <view class="function-box" :style="{
+                width: (size * 7) + 'rpx',
+                height: (size + 2) + 'rpx',
+                top: (windowHeight - (size * 3)) + 'rpx'
+            }">
+                <image src="/static/util/reverse.png" @click="undo" :style="{width: (size - 6) + 'rpx', height: (size - 6) + 'rpx'}"></image>
+                <image src="/static/util/up.png" @click="moveUp" :style="{width: (size - 6) + 'rpx', height: (size - 6) + 'rpx'}"></image>
+                <image src="/static/util/clean.png" @click="clear" :style="{width: (size - 6) + 'rpx', height: (size - 6) + 'rpx'}"></image>
+            </view>
 		</view>
 	</view>
 </template>
@@ -60,8 +79,8 @@ const simpleData = ref([
 	{ name: '刷子', src: '/static/img/9.jpg' },
 	{ name: '鸡腿', src: '/static/img/chicken.png' },
     { name: '鸡蛋', src: '/static/img/egg.png' },
-    { name: '鱼', src: '/static/img/fish.png' },
-    { name: '汉堡', src: '/static/img/hambuger.png' },
+    { name: '鱼', src: '/static/img/fish.png'},
+    { name: '汉堡', src: '/static/img/hamburger.png'},
     { name: '牛奶', src: '/static/img/milk.png' },
     { name: '面条', src: '/static/img/noodles.png' },
 ]);
@@ -72,27 +91,28 @@ onMounted(() => {
 	const height = uni.getSystemInfoSync().windowHeight;
 	const top = uni.upx2px(height) / height;
 	windowHeight.value = height / top;
+    console.log("windowHeight:....",windowHeight.value)
 });
 
 function init() {
 	moveData.value = [];
-	const renderData = Array.from(new Array(oneGroupCount.value * group.value))
+    // 创建一个长度为 oneGroupCount:3 * group:8 * simpleData.length 的数组，用于生成初始卡片组的数量
+	const renderData = Array.from(new Array(oneGroupCount.value * group.value))  
 		.map(() => simpleData.value.map(v => ({ ...v })))
 		.flat()
-		.sort(() => Math.random() - 0.5);
-    
+		.sort(() => Math.random() - 0.5);  // 打乱生成的 renderData 数组
 	const cells = [];
-	for (let ly = layerCount.value - 1; ly >= 0; ly--) { // ly 表示层级
-		for (let i = 0; i < rows.value; i++) {
-			for (let j = 0; j < cols.value; j++) {
+	for (let ly = layerCount.value - 1; ly >= 0; ly--) { // ly 表示层级，从最高层往底层排列
+		for (let i = 0; i < rows.value; i++) { // 遍历每一行
+			for (let j = 0; j < cols.value; j++) { // 遍历每一列
 				let pyStep = (ly + 1) % 2 === 0 ? size.value / 2 : 0; //pyStep 决定层级的偏移步长，使得偶数层相对奇数层偏移 size.value / 2
-				let item = Math.random() > 0.7 && renderData.pop();
+				let item = Math.random() > 0.7 && renderData.pop();  // 随机决定是否填充卡片数据
 				item && cells.push({
 					ly,
 					i,
 					j,
-					left: size.value * j + pyStep,
-					top: size.value * i + pyStep,
+					left: size.value * j + pyStep,  // 计算卡片的左边位置，同一列的j相同，即左边位置相同
+					top: size.value * i + pyStep,  // 计算卡片的上边位置，同一行的i相同，即顶部位置相同
 					id: `m${ly}-${i}-${j}`,
 					name: item.name,
 					src: item.src,
@@ -103,14 +123,16 @@ function init() {
 	}
 	cellHtml.value = cells.reverse(); // 反转 cells 数组（确保底层先显示，顶层后显示）
 	checkDisabled();
+    console.log(cellHtml)
 }
 
+// 检查每张卡片是否被遮挡
 function checkDisabled() {
 	cellHtml.value.forEach((v) => {
-		const arr = v.id.substring(1).split('-').map(Number);
+		const arr = v.id.substring(1).split('-').map(Number);  // 层级、行、列
 		const isPy = (arr[0] + 1) % 2 === 0;
-		for (let i = arr[0] + 1; i <= layerCount.value - 1; i++) {
-			const isPyB = (i + 1) % 2 === 0;
+		for (let i = arr[0] + 1; i <= layerCount.value - 1; i++) { // 遍历比当前层级更高的层
+			const isPyB = (i + 1) % 2 === 0; // 判断上层的奇偶性
 			const hasOverlay = checkOverlay(arr, i, isPy, isPyB);
 			v.disabled = hasOverlay;
 			if (hasOverlay) break;
@@ -142,7 +164,6 @@ function checkOverlay(arr, i, isPy, isPyB) {
 
 // 点击物品项时，将其移动到一个展示框
 function move(item) {
-    console.log(item)
     // canMove.value：表示是否可以移动物品项，若为 false 则退出。
     // item.disabled：表示该物品项是否被禁用，若为 true 则退出。
     // item.click：表示物品项是否已经被点击并移动过，若为 true 则退出。
@@ -257,5 +278,22 @@ function showModal(contents) {
 	border: 1 solid #ddd;
 	background-color: rgb(150, 91, 27);
 	margin: 0 auto;
+}
+
+.temp-list {
+	position: relative;
+	border: 1 solid #ddd;
+	background-color: rgb(150, 91, 27);
+	margin: 0 auto;
+}
+
+.function-box {
+    position: relative;
+    border: 1 solid #ddd;
+    background-color: rgba(0,0,0,0);
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
 }
 </style>
