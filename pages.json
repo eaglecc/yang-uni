@@ -6,15 +6,22 @@
 				"navigationBarTitleText": "心雨百宝箱"
 			}
 		},
+        {
+            "path" : "pages/yang/selectStage",
+            "style" : 
+            {
+                "navigationBarTitleText" : ""
+            }
+        },
 		{
-		    "path" : "pages/yang/yang",
+		    "path" : "pages/yang/stage/stage1",
 		    "style" : 
 		    {
-		        "navigationBarTitleText" : "消除小游戏"
+		        "navigationBarTitleText" : ""
 		    }
 		},
 		{
-		    "path" : "pages/yang/stage1/stage1",
+		    "path" : "pages/yang/stage/stage2",
 		    "style" : 
 		    {
 		        "navigationBarTitleText" : ""

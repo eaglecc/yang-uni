@@ -55,11 +55,11 @@ import { reactive, ref, onMounted } from 'vue';
 
 const windowHeight = ref(0);
 const size = ref(100); // 卡片大小
-const rows = ref(7); // 行数
-const cols = ref(7); // 列数
+const rows = ref(1); // 行数
+const cols = ref(4); // 列数
 const oneGroupCount = ref(3); // 每组卡片数量
 const group = ref(8); // 组数
-const layerCount = ref(24); // 总层数
+const layerCount = ref(72); // 总层数
 
 // 储存卡片信息和消除状态
 const cellHtml = ref([]);
@@ -106,61 +106,72 @@ function init() {
 	for (let ly = layerCount.value - 1; ly >= 0; ly--) { // ly 表示层级，从最高层往底层排列
 		for (let i = 0; i < rows.value; i++) { // 遍历每一行
 			for (let j = 0; j < cols.value; j++) { // 遍历每一列
-				let pyStep = (ly + 1) % 2 === 0 ? size.value / 2 : 0; //pyStep 决定层级的偏移步长，使得偶数层相对奇数层偏移 size.value / 2
-				let item = Math.random() > 0.7 && renderData.pop();  // 随机决定是否填充卡片数据
-				item && cells.push({
-					ly,
-					i,
-					j,
-					left: size.value * j + pyStep,  // 计算卡片的左边位置，同一列的j相同，即左边位置相同
-					top: size.value * i + pyStep,  // 计算卡片的上边位置，同一行的i相同，即顶部位置相同
-					id: `m${ly}-${i}-${j}`,
-					name: item.name,
-					src: item.src,
-					isMove: false
-				});
+				let item =  renderData.pop();  // 随机决定是否填充卡片数据
+                if (ly === layerCount.value - 1 || ly === layerCount.value - 2 || ly === layerCount.value - 3 || ly === layerCount.value - 4 ){
+                    if (ly === layerCount.value - 4){
+                        cells.push({
+                        	ly: layerCount.value - 4,
+                        	i: i,
+                        	j: j,
+                        	left: size.value * j + j * size.value ,  // 计算卡片的左边位置，同一列的j相同，即左边位置相同
+                        	top: size.value * i + 180 + (layerCount.value - 1 - ly) * 100,  // 计算卡片的上边位置，同一行的i相同，即顶部位置相同
+                        	id: `m${ly}-${i}-${j}`,
+                        	name: item.name,
+                        	src: item.src,
+                        	isMove: false
+                        });
+                    }else {
+                        cells.push({
+                        	ly: layerCount.value - 4,
+                        	i: i,
+                        	j: j,
+                        	left: size.value * j + j * size.value ,  // 计算卡片的左边位置，同一列的j相同，即左边位置相同
+                        	top: size.value * i + 600 + (layerCount.value - 1 - ly) * 100,  // 计算卡片的上边位置，同一行的i相同，即顶部位置相同
+                        	id: `m${ly}-${i}-${j}`,
+                        	name: item.name,
+                        	src: item.src,
+                        	isMove: false
+                        });
+                    }
+                    
+                }
+                else {
+                    cells.push({
+                    	ly,
+                    	i,
+                    	j,
+                    	left: size.value * j + j * 100 ,  // 计算卡片的左边位置，同一列的j相同，即左边位置相同
+                    	top: size.value * i + ly * 7,  // 计算卡片的上边位置，同一行的i相同，即顶部位置相同
+                    	id: `m${ly}-${i}-${j}`,
+                    	name: item.name,
+                    	src: item.src,
+                    	isMove: false
+                    });
+                }
 			}
 		}
 	}
 	cellHtml.value = cells.reverse(); // 反转 cells 数组（确保底层先显示，顶层后显示）
 	checkDisabled();
 }
-
 // 检查每张卡片是否被遮挡
 function checkDisabled() {
 	cellHtml.value.forEach((v) => {
 		const arr = v.id.substring(1).split('-').map(Number);  // 层级、行、列
-		const isPy = (arr[0] + 1) % 2 === 0;
-		for (let i = arr[0] + 1; i <= layerCount.value - 1; i++) { // 遍历比当前层级更高的层
-			const isPyB = (i + 1) % 2 === 0; // 判断上层的奇偶性
-			const hasOverlay = checkOverlay(arr, i, isPy, isPyB);
-			v.disabled = hasOverlay;
-			if (hasOverlay) break;
-		}
-	});
-}
+		const currentLayer = arr[0]; // 当前层级
+		let isBlocked = false; // 默认不被遮挡
 
-function checkOverlay(arr, i, isPy, isPyB) {
-	if (isPy === isPyB) {
-		return !!cellHtml.value.find(item => item.id === `m${i}-${arr[1]}-${arr[2]}`);
-	} else if (isPy && !isPyB) {
-		const ids = [
-			`${i}-${arr[1]}-${arr[2]}`,
-			`${i}-${arr[1]}-${arr[2] + 1}`,
-			`${i}-${arr[1] + 1}-${arr[2]}`,
-			`${i}-${arr[1] + 1}-${arr[2] + 1}`
-		];
-		return ids.some(k => cellHtml.value.find(item => item.id === `m${k}`));
-	} else {
-		const ids = [
-			`${i}-${arr[1]}-${arr[2]}`,
-			`${i}-${arr[1]}-${arr[2] - 1}`,
-			`${i}-${arr[1] - 1}-${arr[2]}`,
-			`${i}-${arr[1] - 1}-${arr[2] - 1}`
-		];
-        
-		return ids.some(k => cellHtml.value.find(item => item.id === `m${k}`));
-	}
+		// 遍历比当前层级更高的层
+		for (let i = currentLayer + 1; i <= layerCount.value - 4; i++) { 
+			// 判断上层的对应行和列是否存在卡片
+			if (cellHtml.value.some(item => item.id === `m${i}-${arr[1]}-${arr[2]}`)) {
+				isBlocked = true; // 如果找到遮挡，设置为遮挡状态
+				break; // 找到遮挡后，退出循环
+			}
+		}
+
+		v.disabled = isBlocked; // 更新当前卡片的禁用状态
+	});
 }
 
 function processId(id) {
@@ -181,6 +192,7 @@ function processId(id) {
 
 // 点击物品项时，将其移动到一个展示框
 function move(item) {
+    console.log(item)
     // canMove.value：表示是否可以移动物品项，若为 false 则退出。
     // item.disabled：表示该物品项是否被禁用，若为 true 则退出。
     // item.click：表示物品项是否已经被点击并移动过，若为 true 则退出。
@@ -279,7 +291,6 @@ function modeEnd(item) {
 
 // 清除功能
 function clear(clearNum) {
-    console.log("clearNum...", clearNum)
     // 获取 tempData 的位置信息
     const tempList = uni.createSelectorQuery().select(".temp-list");
     tempList.boundingClientRect(data => {
