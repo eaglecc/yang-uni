@@ -1,6 +1,32 @@
 <template>
 	<view>
 		<view style="margin: 0; display: block; background-color: #71a419; height: 100vh;">
+            <!-- 消除展示框 -->
+            <view class="move-list" :style="{
+            	width: (size * 7) + 'rpx',
+                height: (size + 2) + 'rpx',
+            	top: (windowHeight - (size * 3.5)) + 'rpx'
+            }">
+            </view>
+            <!-- 临时展示框 -->
+            <view class="temp-list" :style="{
+            	width: (size * 7) + 'rpx',
+            	top: (windowHeight - (size * 7.5)) + 'rpx'
+            }">
+                
+            </view>
+            
+            <!-- 功能框 -->
+            <view class="function-box" :style="{
+                width: (size * 7) + 'rpx',
+                height: (size + 2) + 'rpx',
+                top: (windowHeight - (size * 3)) + 'rpx'
+            }">
+                <image src="/static/util/reverse.png" @click="clear(1)" :style="{width: (size - 6) + 'rpx', height: (size - 6) + 'rpx'}"></image>
+                <image src="/static/util/up.png" @click="clear(3)" :style="{width: (size - 6) + 'rpx', height: (size - 6) + 'rpx'}"></image>
+                <image src="/static/util/clean.png" @click="clear(7)" :style="{width: (size - 6) + 'rpx', height: (size - 6) + 'rpx'}"></image>
+            </view>
+            
 			<!-- 卡牌框 -->
 			<view class="mall">
 				<view v-for="(item, index) in cellHtml" :key="index" class="item" :class="{ disabled: item.disabled }"
@@ -20,32 +46,6 @@
 					}" :src="item.src"></image>
 				</view>
 			</view>
-            <!-- 临时展示框 -->
-            <view class="temp-list" :style="{
-            	width: (size * 7) + 'rpx',
-                height: (size + 2) + 'rpx',
-            	top: (windowHeight - (size * 6)) + 'rpx'
-            }">
-            </view>
-            
-            <!-- 消除展示框 -->
-            <view class="move-list" :style="{
-            	width: (size * 7) + 'rpx',
-                height: (size + 2) + 'rpx',
-            	top: (windowHeight - (size * 3.5)) + 'rpx'
-            }">
-            </view>
-
-            <!-- 功能框 -->
-            <view class="function-box" :style="{
-                width: (size * 7) + 'rpx',
-                height: (size + 2) + 'rpx',
-                top: (windowHeight - (size * 3)) + 'rpx'
-            }">
-                <image src="/static/util/reverse.png" @click="undo" :style="{width: (size - 6) + 'rpx', height: (size - 6) + 'rpx'}"></image>
-                <image src="/static/util/up.png" @click="moveUp" :style="{width: (size - 6) + 'rpx', height: (size - 6) + 'rpx'}"></image>
-                <image src="/static/util/clean.png" @click="clear" :style="{width: (size - 6) + 'rpx', height: (size - 6) + 'rpx'}"></image>
-            </view>
 		</view>
 	</view>
 </template>
@@ -64,6 +64,7 @@ const layerCount = ref(24); // 总层数
 // 储存卡片信息和消除状态
 const cellHtml = ref([]);
 const moveData = ref([]);
+const tempData = ref([]);
 const canMove = ref(true);
 
 // 卡片内容
@@ -91,11 +92,11 @@ onMounted(() => {
 	const height = uni.getSystemInfoSync().windowHeight;
 	const top = uni.upx2px(height) / height;
 	windowHeight.value = height / top;
-    console.log("windowHeight:....",windowHeight.value)
 });
 
 function init() {
 	moveData.value = [];
+    tempData.value = [];
     // 创建一个长度为 oneGroupCount:3 * group:8 * simpleData.length 的数组，用于生成初始卡片组的数量
 	const renderData = Array.from(new Array(oneGroupCount.value * group.value))  
 		.map(() => simpleData.value.map(v => ({ ...v })))
@@ -123,7 +124,6 @@ function init() {
 	}
 	cellHtml.value = cells.reverse(); // 反转 cells 数组（确保底层先显示，顶层后显示）
 	checkDisabled();
-    console.log(cellHtml)
 }
 
 // 检查每张卡片是否被遮挡
@@ -158,9 +158,26 @@ function checkOverlay(arr, i, isPy, isPyB) {
 			`${i}-${arr[1] - 1}-${arr[2]}`,
 			`${i}-${arr[1] - 1}-${arr[2] - 1}`
 		];
+        
 		return ids.some(k => cellHtml.value.find(item => item.id === `m${k}`));
 	}
 }
+
+function processId(id) {
+    // 按 "-" 分割字符串
+    let parts = id.split("-");
+    
+    // 检查最后一部分是否为 "temp"
+    if (parts[parts.length - 1] === "temp") {
+        // 移除最后一部分
+        parts.pop();
+        parts.pop();
+    }
+    
+    // 重新组合成字符串并返回
+    return parts.join("-");
+}
+
 
 // 点击物品项时，将其移动到一个展示框
 function move(item) {
@@ -170,6 +187,11 @@ function move(item) {
 	if (!canMove.value || item.disabled || item.click){
         return; 
     } 
+    item.id = processId(item.id)
+    // 在 tempData 中查找并移除该元素
+    const tempIndex = tempData.value.findIndex(tempItem => {
+        return tempItem.id === item.id.replace("-move", "-temp")
+    });
     
 	canMove.value = false; // 在本次操作完成前不允许再次移动其他物品
 	const moveList = uni.createSelectorQuery().select(".move-list");
@@ -184,6 +206,27 @@ function move(item) {
 		item.id += "-move";  // 更新物品项 id，标识其已移动
         
 		moveData.value.push(item);
+        if (tempIndex > -1) {
+            tempData.value.splice(tempIndex, 1);
+            // 重新排列 tempData，按每行最多 7 个元素布局
+            const maxPerRow = 7;
+            tempData.value.forEach((it, index) => {
+                const row = Math.floor(index / maxPerRow); // 行数
+                const col = index % maxPerRow; // 列数
+                const tempList = uni.createSelectorQuery().select(".temp-list");
+                tempList.boundingClientRect(data => {
+                    let left = data.left;
+                    let top = data.top;
+                    let scaleLeft = uni.upx2px(left) / left;
+                    let scaleTop = uni.upx2px(top) / top;
+
+                    // 根据行和列重新设置元素位置
+                    it.left = left / scaleLeft + size.value * col;
+                    it.top = top / scaleTop + size.value * row;
+                }).exec();
+            });
+        }
+
 		modeEnd(item);
 		canMove.value = true;
 	}).exec();
@@ -192,7 +235,7 @@ function move(item) {
 function modeEnd(item) {
 	// 获取所有名称相同的项目
 	let findResult = moveData.value.filter(v => v.name === item.name);
-
+    
 	if (findResult.length === 3) {
 		setTimeout(() => {
 			findResult.forEach(v => {
@@ -233,6 +276,55 @@ function modeEnd(item) {
 	checkDisabled();
 }
 
+
+// 清除功能
+function clear(clearNum) {
+    console.log("clearNum...", clearNum)
+    // 获取 tempData 的位置信息
+    const tempList = uni.createSelectorQuery().select(".temp-list");
+    tempList.boundingClientRect(data => {
+        const left = data.left;
+        const top = data.top;
+        const scaleLeft = uni.upx2px(left) / left;
+        const scaleTop = uni.upx2px(top) / top;
+        const maxPerRow = 7;  // 每行最多 7 个元素
+        const existingCount = tempData.value.length;  // 获取当前 tempData 中已有元素的数量
+        if (existingCount + clearNum > 21) {
+            uni.showModal({
+            	title: '提示',
+            	content: '已达到最大道具使用限制！',
+            	showCancel: false,
+            });
+            return;
+        }
+        // 将每个 moveData 项目移动到 tempData 位置
+        moveData.value.slice(0, clearNum).forEach((item, index) => {
+            
+            const totalIndex = existingCount + index;
+            // 计算行和列的位置
+            const row = Math.floor(totalIndex / maxPerRow); // 第几行
+            const col = totalIndex % maxPerRow;             // 当前行的第几个
+
+            // 设置 left 和 top，使其超过 7 个后换行
+            item.left = left / scaleLeft + size.value * col;
+            item.top = top / scaleTop + size.value * row;
+            item.click = false;
+            item.id += "-temp";
+            tempData.value.push(item); // 将 item 添加到 tempData
+        });
+
+        moveData.value.splice(0, clearNum);
+        // 重新排列展示框内的卡片位置
+        moveData.value.forEach((it, index) => {
+        	const moveList = uni.createSelectorQuery().select(".move-list");
+        	moveList.boundingClientRect(data => {
+        		let left = data.left
+                let scaleLeft = uni.upx2px(left)/left
+        		it.left = left/scaleLeft + size.value * index;
+        	}).exec();
+        });
+    }).exec();
+}
 
 function showModal(contents) {
 	uni.showModal({
@@ -281,9 +373,11 @@ function showModal(contents) {
 }
 
 .temp-list {
+    display: flex;
+    flex-wrap: wrap;
 	position: relative;
 	border: 1 solid #ddd;
-	background-color: rgb(150, 91, 27);
+	background-color: rgba(0,0,0,0);
 	margin: 0 auto;
 }
 
