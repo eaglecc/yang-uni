@@ -1,32 +1,35 @@
 <template>
 	<view>
 		<view style="margin: 0; display: block; background-color: #71a419; height: 100vh;">
-            <!-- 消除展示框 -->
-            <view class="move-list" :style="{
-            	width: (size * 7) + 'rpx',
-                height: (size + 2) + 'rpx',
-            	top: (windowHeight - (size * 3.5)) + 'rpx'
-            }">
-            </view>
-            <!-- 临时展示框 -->
-            <view class="temp-list" :style="{
-            	width: (size * 7) + 'rpx',
-            	top: (windowHeight - (size * 7.5)) + 'rpx'
-            }">
-                
-            </view>
-            
-            <!-- 功能框 -->
-            <view class="function-box" :style="{
-                width: (size * 7) + 'rpx',
-                height: (size + 2) + 'rpx',
-                top: (windowHeight - (size * 3)) + 'rpx'
-            }">
-                <image src="/static/util/reverse.png" @click="clear(1)" :style="{width: (size - 6) + 'rpx', height: (size - 6) + 'rpx'}"></image>
-                <image src="/static/util/up.png" @click="clear(3)" :style="{width: (size - 6) + 'rpx', height: (size - 6) + 'rpx'}"></image>
-                <image src="/static/util/clean.png" @click="clear(7)" :style="{width: (size - 6) + 'rpx', height: (size - 6) + 'rpx'}"></image>
-            </view>
-            
+			<!-- 消除展示框 -->
+			<view class="move-list" :style="{
+				width: (size * 7) + 'rpx',
+				height: (size + 2) + 'rpx',
+				top: (windowHeight - (size * 3.5)) + 'rpx'
+			}">
+			</view>
+			<!-- 临时展示框 -->
+			<view class="temp-list" :style="{
+				width: (size * 7) + 'rpx',
+				top: (windowHeight - (size * 7.5)) + 'rpx'
+			}">
+
+			</view>
+
+			<!-- 功能框 -->
+			<view class="function-box" :style="{
+				width: (size * 7) + 'rpx',
+				height: (size + 2) + 'rpx',
+				top: (windowHeight - (size * 3)) + 'rpx'
+			}">
+				<image src="/static/util/reverse.png" @click="clear(1)"
+					:style="{ width: (size - 6) + 'rpx', height: (size - 6) + 'rpx' }"></image>
+				<image src="/static/util/up.png" @click="clear(3)"
+					:style="{ width: (size - 6) + 'rpx', height: (size - 6) + 'rpx' }"></image>
+				<image src="/static/util/clean.png" @click="clear(7)"
+					:style="{ width: (size - 6) + 'rpx', height: (size - 6) + 'rpx' }"></image>
+			</view>
+
 			<!-- 卡牌框 -->
 			<view class="mall">
 				<view v-for="(item, index) in cellHtml" :key="index" class="item" :class="{ disabled: item.disabled }"
@@ -79,11 +82,12 @@ const simpleData = ref([
 	{ name: '玉米', src: '/static/img/8.jpg' },
 	{ name: '刷子', src: '/static/img/9.jpg' },
 	{ name: '鸡腿', src: '/static/img/chicken.png' },
-    { name: '鸡蛋', src: '/static/img/egg.png' },
-    { name: '鱼', src: '/static/img/fish.png'},
-    { name: '汉堡', src: '/static/img/hamburger.png'},
-    { name: '牛奶', src: '/static/img/milk.png' },
-    { name: '面条', src: '/static/img/noodles.png' },
+	{ name: '鸡蛋', src: '/static/img/egg.png' },
+	{ name: '鱼', src: '/static/img/fish.png' },
+	{ name: '汉堡', src: '/static/img/hamburger.png' },
+	{ name: '牛奶', src: '/static/img/milk.png' },
+	{ name: '面条', src: '/static/img/noodles.png' },
+	{ name: '披萨', src: '/static/img/pizza.png' },
 ]);
 
 // 页面初始化
@@ -96,32 +100,39 @@ onMounted(() => {
 
 function init() {
 	moveData.value = [];
-    tempData.value = [];
-    // 创建一个长度为 oneGroupCount:3 * group:8 * simpleData.length 的数组，用于生成初始卡片组的数量  
-	const renderData = Array.from(new Array(oneGroupCount.value * group.value))  
+	tempData.value = [];
+	// 创建一个长度为 18 * simpleData.length = 18 * 16 = 288 的数组，用于生成初始卡片组的数量  
+	const renderData = Array.from(new Array(18))
 		.map(() => simpleData.value.map(v => ({ ...v })))
 		.flat()
 		.sort(() => Math.random() - 0.5);  // 打乱生成的 renderData 数组
+
+	// console.log("before renderData...", renderData)
 	const cells = [];
 	for (let ly = layerCount.value - 1; ly >= 0; ly--) { // ly 表示层级，从最高层往底层排列
 		for (let i = 0; i < rows.value; i++) { // 遍历每一行
 			for (let j = 0; j < cols.value; j++) { // 遍历每一列
 				let pyStep = (ly + 1) % 2 === 0 ? size.value / 2 : 0; //pyStep 决定层级的偏移步长，使得偶数层相对奇数层偏移 size.value / 2
-				let item = Math.random() > 0.7 && renderData.pop();  // 随机决定是否填充卡片数据
-				item && cells.push({
-					ly,
-					i,
-					j,
-					left: size.value * j + pyStep,  // 计算卡片的左边位置，同一列的j相同，即左边位置相同
-					top: size.value * i + pyStep,  // 计算卡片的上边位置，同一行的i相同，即顶部位置相同
-					id: `m${ly}-${i}-${j}`,
-					name: item.name,
-					src: item.src,
-					isMove: false
-				});
+				let isShow = Math.random() > 0.7
+				if (isShow > 0) {
+					let item = renderData.pop();  // 随机决定是否填充卡片数据
+					// console.log("item...",item)
+					item && cells.push({
+						ly,
+						i,
+						j,
+						left: size.value * j + pyStep,  // 计算卡片的左边位置，同一列的j相同，即左边位置相同
+						top: size.value * i + pyStep,  // 计算卡片的上边位置，同一行的i相同，即顶部位置相同
+						id: `m${ly}-${i}-${j}`,
+						name: item.name,
+						src: item.src,
+						isMove: false
+					});
+				}
 			}
 		}
 	}
+	// console.log("cells...", cells)
 	cellHtml.value = cells.reverse(); // 反转 cells 数组（确保底层先显示，顶层后显示）
 	checkDisabled();
 }
@@ -158,74 +169,74 @@ function checkOverlay(arr, i, isPy, isPyB) {
 			`${i}-${arr[1] - 1}-${arr[2]}`,
 			`${i}-${arr[1] - 1}-${arr[2] - 1}`
 		];
-        
+
 		return ids.some(k => cellHtml.value.find(item => item.id === `m${k}`));
 	}
 }
 
 function processId(id) {
-    // 按 "-" 分割字符串
-    let parts = id.split("-");
-    
-    // 检查最后一部分是否为 "temp"
-    if (parts[parts.length - 1] === "temp") {
-        // 移除最后一部分
-        parts.pop();
-        parts.pop();
-    }
-    
-    // 重新组合成字符串并返回
-    return parts.join("-");
+	// 按 "-" 分割字符串
+	let parts = id.split("-");
+
+	// 检查最后一部分是否为 "temp"
+	if (parts[parts.length - 1] === "temp") {
+		// 移除最后一部分
+		parts.pop();
+		parts.pop();
+	}
+
+	// 重新组合成字符串并返回
+	return parts.join("-");
 }
 
 
 // 点击物品项时，将其移动到一个展示框
 function move(item) {
-    // canMove.value：表示是否可以移动物品项，若为 false 则退出。
-    // item.disabled：表示该物品项是否被禁用，若为 true 则退出。
-    // item.click：表示物品项是否已经被点击并移动过，若为 true 则退出。
-	if (!canMove.value || item.disabled || item.click){
-        return; 
-    } 
-    item.id = processId(item.id)
-    // 在 tempData 中查找并移除该元素
-    const tempIndex = tempData.value.findIndex(tempItem => {
-        return tempItem.id === item.id.replace("-move", "-temp")
-    });
-    
+	// canMove.value：表示是否可以移动物品项，若为 false 则退出。
+	// item.disabled：表示该物品项是否被禁用，若为 true 则退出。
+	// item.click：表示物品项是否已经被点击并移动过，若为 true 则退出。
+	if (!canMove.value || item.disabled || item.click) {
+		return;
+	}
+	item.id = processId(item.id)
+	// 在 tempData 中查找并移除该元素
+	const tempIndex = tempData.value.findIndex(tempItem => {
+		return tempItem.id === item.id.replace("-move", "-temp")
+	});
+
 	canMove.value = false; // 在本次操作完成前不允许再次移动其他物品
 	const moveList = uni.createSelectorQuery().select(".move-list");
 	moveList.boundingClientRect(data => {
 		let left = data.left
 		let top = data.top
-        let scaleLeft = uni.upx2px(left)/left
-        let scaleTop = uni.upx2px(top)/top
-		item.left = left/scaleLeft + size.value * moveData.value.length;
-		item.top = top/scaleTop;
+		let scaleLeft = uni.upx2px(left) / left
+		let scaleTop = uni.upx2px(top) / top
+		item.left = left / scaleLeft + size.value * moveData.value.length;
+		item.top = top / scaleTop;
 		item.click = true;  // 标记物品项为已点击状态，防止重复点击
 		item.id += "-move";  // 更新物品项 id，标识其已移动
-        
-		moveData.value.push(item);
-        if (tempIndex > -1) {
-            tempData.value.splice(tempIndex, 1);
-            // 重新排列 tempData，按每行最多 7 个元素布局
-            const maxPerRow = 7;
-            tempData.value.forEach((it, index) => {
-                const row = Math.floor(index / maxPerRow); // 行数
-                const col = index % maxPerRow; // 列数
-                const tempList = uni.createSelectorQuery().select(".temp-list");
-                tempList.boundingClientRect(data => {
-                    let left = data.left;
-                    let top = data.top;
-                    let scaleLeft = uni.upx2px(left) / left;
-                    let scaleTop = uni.upx2px(top) / top;
 
-                    // 根据行和列重新设置元素位置
-                    it.left = left / scaleLeft + size.value * col;
-                    it.top = top / scaleTop + size.value * row;
-                }).exec();
-            });
-        }
+		moveData.value.push(item);
+		if (tempIndex > -1) {
+			tempData.value.splice(tempIndex, 1);
+			// 重新排列 tempData，按每行最多 7 个元素布局
+			const maxPerRow = 7;
+			tempData.value.forEach((it, index) => {
+				const row = Math.floor(index / maxPerRow); // 行数
+				const col = index % maxPerRow; // 列数
+				const tempList = uni.createSelectorQuery().select(".temp-list");
+				tempList.boundingClientRect(data => {
+					let left = data.left;
+					let top = data.top;
+					let scaleLeft = uni.upx2px(left) / left;
+					let scaleTop = uni.upx2px(top) / top;
+
+					// 根据行和列重新设置元素位置
+					it.left = left / scaleLeft + size.value * col;
+					it.top = top / scaleTop + size.value * row;
+				}).exec();
+			});
+		}
 
 		modeEnd(item);
 		canMove.value = true;
@@ -235,7 +246,7 @@ function move(item) {
 function modeEnd(item) {
 	// 获取所有名称相同的项目
 	let findResult = moveData.value.filter(v => v.name === item.name);
-    
+
 	if (findResult.length === 3) {
 		setTimeout(() => {
 			findResult.forEach(v => {
@@ -256,8 +267,8 @@ function modeEnd(item) {
 				const moveList = uni.createSelectorQuery().select(".move-list");
 				moveList.boundingClientRect(data => {
 					let left = data.left
-                    let scaleLeft = uni.upx2px(left)/left
-					it.left = left/scaleLeft + size.value * index;
+					let scaleLeft = uni.upx2px(left) / left
+					it.left = left / scaleLeft + size.value * index;
 				}).exec();
 			});
 		}, 300);
@@ -266,9 +277,9 @@ function modeEnd(item) {
 	setTimeout(() => {
 		// 游戏结束或通关提示
 		if (moveData.value.length === 7) {
-            showModal("池子已满，游戏结束")
+			showModal("池子已满，游戏结束")
 		} else if (cellHtml.value.every(item => item.isMove)) {
-            showModal("恭喜通关")
+			showModal("恭喜通关")
 		}
 	}, 300);
 
@@ -279,50 +290,50 @@ function modeEnd(item) {
 
 // 清除功能
 function clear(clearNum) {
-    // 获取 tempData 的位置信息
-    const tempList = uni.createSelectorQuery().select(".temp-list");
-    tempList.boundingClientRect(data => {
-        const left = data.left;
-        const top = data.top;
-        const scaleLeft = uni.upx2px(left) / left;
-        const scaleTop = uni.upx2px(top) / top;
-        const maxPerRow = 7;  // 每行最多 7 个元素
-        const existingCount = tempData.value.length;  // 获取当前 tempData 中已有元素的数量
-        if (existingCount + clearNum > 21) {
-            uni.showModal({
-            	title: '提示',
-            	content: '已达到最大道具使用限制！',
-            	showCancel: false,
-            });
-            return;
-        }
-        // 将每个 moveData 项目移动到 tempData 位置
-        moveData.value.slice(0, clearNum).forEach((item, index) => {
-            
-            const totalIndex = existingCount + index;
-            // 计算行和列的位置
-            const row = Math.floor(totalIndex / maxPerRow); // 第几行
-            const col = totalIndex % maxPerRow;             // 当前行的第几个
+	// 获取 tempData 的位置信息
+	const tempList = uni.createSelectorQuery().select(".temp-list");
+	tempList.boundingClientRect(data => {
+		const left = data.left;
+		const top = data.top;
+		const scaleLeft = uni.upx2px(left) / left;
+		const scaleTop = uni.upx2px(top) / top;
+		const maxPerRow = 7;  // 每行最多 7 个元素
+		const existingCount = tempData.value.length;  // 获取当前 tempData 中已有元素的数量
+		if (existingCount + clearNum > 21) {
+			uni.showModal({
+				title: '提示',
+				content: '已达到最大道具使用限制！',
+				showCancel: false,
+			});
+			return;
+		}
+		// 将每个 moveData 项目移动到 tempData 位置
+		moveData.value.slice(0, clearNum).forEach((item, index) => {
 
-            // 设置 left 和 top，使其超过 7 个后换行
-            item.left = left / scaleLeft + size.value * col;
-            item.top = top / scaleTop + size.value * row;
-            item.click = false;
-            item.id += "-temp";
-            tempData.value.push(item); // 将 item 添加到 tempData
-        });
+			const totalIndex = existingCount + index;
+			// 计算行和列的位置
+			const row = Math.floor(totalIndex / maxPerRow); // 第几行
+			const col = totalIndex % maxPerRow;             // 当前行的第几个
 
-        moveData.value.splice(0, clearNum);
-        // 重新排列展示框内的卡片位置
-        moveData.value.forEach((it, index) => {
-        	const moveList = uni.createSelectorQuery().select(".move-list");
-        	moveList.boundingClientRect(data => {
-        		let left = data.left
-                let scaleLeft = uni.upx2px(left)/left
-        		it.left = left/scaleLeft + size.value * index;
-        	}).exec();
-        });
-    }).exec();
+			// 设置 left 和 top，使其超过 7 个后换行
+			item.left = left / scaleLeft + size.value * col;
+			item.top = top / scaleTop + size.value * row;
+			item.click = false;
+			item.id += "-temp";
+			tempData.value.push(item); // 将 item 添加到 tempData
+		});
+
+		moveData.value.splice(0, clearNum);
+		// 重新排列展示框内的卡片位置
+		moveData.value.forEach((it, index) => {
+			const moveList = uni.createSelectorQuery().select(".move-list");
+			moveList.boundingClientRect(data => {
+				let left = data.left
+				let scaleLeft = uni.upx2px(left) / left
+				it.left = left / scaleLeft + size.value * index;
+			}).exec();
+		});
+	}).exec();
 }
 
 function showModal(contents) {
@@ -372,21 +383,21 @@ function showModal(contents) {
 }
 
 .temp-list {
-    display: flex;
-    flex-wrap: wrap;
+	display: flex;
+	flex-wrap: wrap;
 	position: relative;
 	border: 1 solid #ddd;
-	background-color: rgba(0,0,0,0);
+	background-color: rgba(0, 0, 0, 0);
 	margin: 0 auto;
 }
 
 .function-box {
-    position: relative;
-    border: 1 solid #ddd;
-    background-color: rgba(0,0,0,0);
-    margin: 0 auto;
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
+	position: relative;
+	border: 1 solid #ddd;
+	background-color: rgba(0, 0, 0, 0);
+	margin: 0 auto;
+	display: flex;
+	justify-content: space-around;
+	align-items: center;
 }
 </style>

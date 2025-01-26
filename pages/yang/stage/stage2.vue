@@ -108,7 +108,7 @@ function init() {
         .flat()
         .sort(() => Math.random() - 0.5);  // 打乱生成的 renderData 数组
 
-    console.log("before renderData...",renderData)
+    // console.log("before renderData...",renderData)
     const cells = [];
     for (let ly = layerCount.value - 1; ly >= 0; ly--) { // ly 表示层级，从最高层往底层排列
         for (let i = 0; i < rows.value; i++) { // 遍历每一行
@@ -158,7 +158,7 @@ function init() {
             }
         }
     }
-    console.log("cells...",cells)
+    // console.log("cells...",cells)
     cellHtml.value = cells.reverse(); // 反转 cells 数组（确保底层先显示，顶层后显示）
     checkDisabled();
 }
@@ -226,11 +226,11 @@ function checkAndMoveTemp() {
         });
         const tempItems = colItems.filter(item => (item.ly === 999 && (item.click === undefined)));
         const normalItems = colItems.filter(item => (item.ly !== 999 && (item.click === undefined)));
-        console.log(tempItems)
+        // console.log(tempItems)
         // 如果没有临时区域的元素，且普通区域有足够的元素
         if (tempItems.length === 0 && normalItems.length >= 4) {
             const lastFour = normalItems.slice(-4);
-            console.log("最后4个。。", lastFour)
+            // console.log("最后4个。。", lastFour)
             // 将这4个元素移动到临时区域
             const maxTop = Math.max(...lastFour.map(i => i.top));
             lastFour.forEach((item, index) => {
@@ -245,7 +245,7 @@ function checkAndMoveTemp() {
 
 // 点击物品项时，将其移动到一个展示框
 function move(item) {
-    console.log(item)
+    // console.log(item)
     // canMove.value：表示是否可以移动物品项，若为 false 则退出。
     // item.disabled：表示该物品项是否被禁用，若为 true 则退出。
     // item.click：表示物品项是否已经被点击并移动过，若为 true 则退出。
