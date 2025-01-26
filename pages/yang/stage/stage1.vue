@@ -74,7 +74,7 @@ const simpleData = ref([
 	{ name: '羊毛', src: '/static/img/3.jpg' },
 	{ name: '草堆', src: '/static/img/4.jpg' },
 	{ name: '白菜', src: '/static/img/5.jpg' },
-	{ name: '牛奶', src: '/static/img/6.jpg' },
+	{ name: '奶瓶', src: '/static/img/6.jpg' },
 	{ name: '胡萝卜', src: '/static/img/7.jpg' },
 	{ name: '玉米', src: '/static/img/8.jpg' },
 	{ name: '刷子', src: '/static/img/9.jpg' },
@@ -97,7 +97,7 @@ onMounted(() => {
 function init() {
 	moveData.value = [];
     tempData.value = [];
-    // 创建一个长度为 oneGroupCount:3 * group:8 * simpleData.length 的数组，用于生成初始卡片组的数量
+    // 创建一个长度为 oneGroupCount:3 * group:8 * simpleData.length 的数组，用于生成初始卡片组的数量  
 	const renderData = Array.from(new Array(oneGroupCount.value * group.value))  
 		.map(() => simpleData.value.map(v => ({ ...v })))
 		.flat()
