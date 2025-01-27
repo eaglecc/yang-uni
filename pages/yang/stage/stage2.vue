@@ -336,7 +336,7 @@ function modeEnd(item) {
         if (moveData.value.length === 7) {
             showModal("池子已满，游戏结束")
         } else if (cellHtml.value.every(item => item.isMove)) {
-            showModal("恭喜通关")
+            showModal("你赢了!!!")
         }
     }, 300);
 
@@ -359,7 +359,7 @@ function clear(clearNum) {
         if (existingCount + clearNum > 21) {
             uni.showModal({
                 title: '提示',
-                content: '已达到最大道具使用限制！',
+                content: '笨，没格子给你放了！',
                 showCancel: false,
             });
             return;
