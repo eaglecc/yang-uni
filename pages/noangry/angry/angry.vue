@@ -69,7 +69,7 @@ onMounted(() => {
 const fetchHistory = async () => {
 	try {
 		const res = await uni.request({
-			url: 'http://127.0.0.1:8501/api/v1/xutils/getAngryHistory',
+			url: 'http://117.72.91.96:8501/api/v1/xutils/getAngryHistory',
 			method: 'GET'
 		})
 		// console.log("res...",res.data)
@@ -111,7 +111,7 @@ const recordHistory = async () => {
 	}
 	try {
 		const res = await uni.request({
-			url: 'http://127.0.0.1:8501/api/v1/xutils/addAngryHistory',
+			url: 'http://117.72.91.96:8501/api/v1/xutils/addAngryHistory',
 			method: 'POST',
 			data: record,
 			header: {
