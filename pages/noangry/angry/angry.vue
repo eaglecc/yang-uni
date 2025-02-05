@@ -12,7 +12,7 @@
 				<view class="history-title">历史记录</view>
 				<scroll-view class="history-list" scroll-y>
 					<view class="history-item" v-for="(item, index) in historyList" :key="index">
-						{{ item.time }} - {{ item.records }}
+						{{ item.time.slice(0, 10) }} - {{ item.records }}
 					</view>
 				</scroll-view>
 			</view>
@@ -41,6 +41,11 @@
 			<image class="gif-image" src="/static/angry/cat.gif" mode="aspectFit" />
 		</view>
 
+		<!-- 标题框 -->
+		<view class="title-box">
+			<input class="title-input" v-model="titleText" placeholder="请输入标题" />
+		</view>
+
 		<!-- 重置按钮 -->
 		<view class="reset-btn-container">
 			<button class="control-btn reset" @click="resetProgress">我好了，下回再说</button>
@@ -54,6 +59,7 @@ import { ref, onMounted } from 'vue'
 const progress = ref(0)
 const historyList = ref([])
 const showDrawer = ref(false)  // 新增控制抽屉显示的状态
+const titleText = ref('') 
 
 onMounted(() => {
 	fetchHistory()
@@ -63,9 +69,10 @@ onMounted(() => {
 const fetchHistory = async () => {
 	try {
 		const res = await uni.request({
-			url: 'http://127.0.0.1:8501/api/v1/xutils/getAngryHistory', // 替换为你的API地址
+			url: 'http://127.0.0.1:8501/api/v1/xutils/getAngryHistory',
 			method: 'GET'
 		})
+		// console.log("res...",res.data)
 		if (res.statusCode === 200) {
 			// 转换数据格式
 			historyList.value = res.data.data.map(item => ({
@@ -100,22 +107,22 @@ const changeProgress = (value) => {
 const recordHistory = async () => {
 	const record = {
 		progress: progress.value.toFixed(1),
-		records: "xxx"
+		records: titleText.value
 	}
 	try {
 		const res = await uni.request({
-			url: 'http://127.0.0.1:8501/api/v1/xutils/addAngryHistory', // 替换为你的API地址
+			url: 'http://127.0.0.1:8501/api/v1/xutils/addAngryHistory',
 			method: 'POST',
 			data: record,
 			header: {
 				'Content-Type': 'application/json'
 			}
 		})
-		
+
 		if (res.statusCode === 200) {
 			fetchHistory()
 		} else {
-			console.error('记录保存失败:', res.data)
+			showModal("保存记录请求处理失败！")
 		}
 	} catch (error) {
 		showModal("记录保存失败！")
@@ -125,7 +132,8 @@ const recordHistory = async () => {
 const resetProgress = () => {
 	recordHistory() //记录历史
 	progress.value = 0
-	showModal("已记录！")
+	titleText.value = ''
+	showModal("已记录")
 }
 
 function showModal(contents) {
@@ -147,6 +155,27 @@ function showModal(contents) {
 	background-color: #f5f5f5;
 }
 
+.title-box {
+	width: 100%;
+	text-align: center;
+	padding: 10px 0;  /* 减小padding */
+	background-color: #ffffff;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+	margin: 10px 0;  /* 调整margin */
+}
+
+.title-input {
+	font-size: 20px;  /* 减小字体大小 */
+	font-weight: bold;
+	color: #333;
+	text-align: center;
+	border: none;
+	outline: none;
+	width: 100%;
+	max-width: 500px;
+	background-color: transparent;
+}
+
 .history-icon {
 	position: absolute;
 	top: 0px;
@@ -154,9 +183,7 @@ function showModal(contents) {
 	z-index: 999;
 	cursor: pointer;
 	width: 40px;
-	/* 添加固定宽度 */
 	height: 40px;
-	/* 添加固定高度 */
 }
 
 .history-img {
