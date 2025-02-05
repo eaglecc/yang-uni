@@ -6,12 +6,13 @@
 		</view>
 
 		<!-- 侧滑历史记录面板 -->
-		<uni-drawer ref="drawerRef" v-if="showDrawer" mode="right" :style="{ 'z-index': 9999, position: 'absolute', top: '0', right: '0', height: '100vh' }">
+		<uni-drawer ref="drawerRef" v-if="showDrawer" mode="right"
+			:style="{ 'z-index': 9999, position: 'absolute', top: '0', right: '0', height: '100vh' }">
 			<view class="history-panel" @click.stop>
 				<view class="history-title">历史记录</view>
 				<scroll-view class="history-list" scroll-y>
 					<view class="history-item" v-for="(item, index) in historyList" :key="index">
-						{{ new Date(item.time).toLocaleString() }} - {{ item.progress }}%
+						{{ item.time }} - {{ item.records }}
 					</view>
 				</scroll-view>
 			</view>
@@ -54,9 +55,32 @@ const progress = ref(0)
 const historyList = ref([])
 const showDrawer = ref(false)  // 新增控制抽屉显示的状态
 
+onMounted(() => {
+	fetchHistory()
+})
+
+// 获取历史记录数据
+const fetchHistory = async () => {
+	try {
+		const res = await uni.request({
+			url: 'http://127.0.0.1:8501/api/v1/xutils/getAngryHistory', // 替换为你的API地址
+			method: 'GET'
+		})
+		if (res.statusCode === 200) {
+			// 转换数据格式
+			historyList.value = res.data.data.map(item => ({
+				time: item.time,
+				records: item.records
+			}))
+		}
+	} catch (error) {
+		showModal("获取历史记录失败！")
+	}
+}
+
 // 切换抽屉状态
 const toggleDrawer = () => {
-  showDrawer.value = !showDrawer.value
+	showDrawer.value = !showDrawer.value
 }
 
 const changeProgress = (value) => {
@@ -73,12 +97,29 @@ const changeProgress = (value) => {
 
 }
 
-const recordHistory = () => {
+const recordHistory = async () => {
 	const record = {
-		time: new Date().toLocaleString(),
-		progress: progress.value.toFixed(1)
+		progress: progress.value.toFixed(1),
+		records: "xxx"
 	}
-	historyList.value.unshift(record)
+	try {
+		const res = await uni.request({
+			url: 'http://127.0.0.1:8501/api/v1/xutils/addAngryHistory', // 替换为你的API地址
+			method: 'POST',
+			data: record,
+			header: {
+				'Content-Type': 'application/json'
+			}
+		})
+		
+		if (res.statusCode === 200) {
+			fetchHistory()
+		} else {
+			console.error('记录保存失败:', res.data)
+		}
+	} catch (error) {
+		showModal("记录保存失败！")
+	}
 }
 
 const resetProgress = () => {
